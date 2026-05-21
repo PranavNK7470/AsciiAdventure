@@ -1,17 +1,27 @@
 /* started to learn memory management using c and low level Threads .*/
-
+// add an enemy using threads
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
 #include<time.h>
 
-#define ROWS 5
-#define COLS 5
+#define ROWS 10
+#define COLS 10
 
-typedef struct MC {
+typedef struct PLAYER{
     int i;
     int j;
-}mc;
+}player;
+
+typedef struct GOAL {
+    int i;
+    int j;
+}goal;
+
+int found(int pi, int pj, int gi, int gj) {
+    if(gi == pi && gj == pj) return 1;
+    else return 0;
+}
 
 char readDirection() {
     int direction;
@@ -28,7 +38,7 @@ typedef struct Cell {
 } cell;
 cell** cells;
 
-void printMaze(cell** cells) {
+void printMaze(cell** cells, int pi, int pj, int gi, int gj) {
     for(int i = 0; i < ROWS; i++) {
         for(int j = 0; j < COLS; j++) {
             if(cells[i][j].top && i == 0) printf(" __");
@@ -39,7 +49,9 @@ void printMaze(cell** cells) {
 
             if(cells[i][j].left &&  j==0) printf("|");
             else if(j == 0) printf(" ");
-            if(cells[i][j].bottom) printf("__");
+            if(pi == i && pj == j) printf("@ ");
+            else if(gi == i && gj == j) printf("G ");
+            else if(cells[i][j].bottom) printf("__");
             else printf("  ");
             if(cells[i][j].right) printf("|");
             else printf(" ");
@@ -83,7 +95,7 @@ void createMaze(cell** cells, int i, int j) {
                 if(j != 0){
                     cells[i][j-1].right = 0;
                     createMaze(cells,i,j-1);
-                }
+               }
             break;
             case 2:
                 if(j < COLS - 1) {
@@ -117,8 +129,39 @@ int main() {
         }
     }
 
-    createMaze(cells,ROWS-1,COLS/2);
-    printMaze(cells);
 
-    return 0;
+    goal* g = malloc(sizeof(goal));
+    g->i = 0;
+    g->j = 0;
+    player* p = malloc(sizeof(player));
+    p->i = ROWS-1;
+    p->j = COLS/2;
+    createMaze(cells,ROWS-1,COLS/2);
+    
+    while(!found(p->i,p->j,g->i,g->j)) {
+        printMaze(cells,p->i,p->j,g->i,g->j);
+        printf("\n");
+        char d = readDirection();
+        switch(d){
+            case 'w':
+                if(p->i > 0 && !cells[p->i][p->j].bottom) p->i -= 1;
+                break;
+            case 's':
+                if(p->i < ROWS - 1 && cells[p->i][p->j].top) p->i += 1;
+                break;
+            case 'a':
+                if(p->j > 0 && cells[p->i][p->j].left) p->j -= 1;
+                break;
+            case 'd':
+                if(p->j < COLS -1 && cells[p->i][p->j].right) p->j += 1;
+                break;
+        }
+        system("cls");
+    }
+    if(found) {
+        system("cls");
+        printf("You Found the Booty!");
+        usleep(10000);
+    }
+   return 0;
 }
